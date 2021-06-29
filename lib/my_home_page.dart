@@ -14,7 +14,8 @@ List<lijn> lijnen = [lijn(0.0, 0.0)];
 
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
-
+  var x=0;
+  double offset = 90;
   //teken widget
   CustomPaint tekenaar = CustomPaint(size: Size(300, 300), painter: MyPainter(),);
 
@@ -26,15 +27,15 @@ class _MyHomePageState extends State<MyHomePage> {
     print(details.globalPosition.dx.toString()+" , " + details.globalPosition.dy.toString());
 
 
-    setState(() {lijnen.last.voegToe(Offset(details.globalPosition.dx,details.globalPosition.dy));});//zorgt ervoor dat hij tekend
-
+    setState(() {lijnen.last.voegToe(Offset(details.globalPosition.dx,details.globalPosition.dy-offset));});//zorgt ervoor dat hij tekend
+    x++;
   }
 
   void dragStart(DragStartDetails details){//start bij drukken vinger
     if (lijnen[0]==lijn(0, 0))//als brol lijn is (eerste lijn)
-      lijnen[0] =(lijn(details.globalPosition.dx,details.globalPosition.dy));//brol lijn overschrijven
+      lijnen[0] =(lijn(details.globalPosition.dx,details.globalPosition.dy-offset));//brol lijn overschrijven
     else
-      lijnen.add(lijn(details.globalPosition.dx,details.globalPosition.dy));
+      lijnen.add(lijn(details.globalPosition.dx,details.globalPosition.dy-offset));
     print("start lijn");
     setState(() {});//zorgt ervoor dat hij tekend
   }
@@ -59,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: Stack(
           children: <Widget>[
+            Text(x.toString()),//moet er om vage rede bij omdat anders setstate ni werkt. later beter fixe
             tekenaar,
             GestureDetector(
               onPanUpdate: dragUpdate,
@@ -100,4 +102,22 @@ class MyPainter extends CustomPainter { //         <-- CustomPainter class
   bool shouldRepaint(CustomPainter old) {//functie die altijd false returnt. geen idee waarom da erbij moet
     return false;
   }
+
+  void verf(Canvas canvas, Size size,lijnen){
+    Paint verf = Paint();
+
+    for (var lijn in lijnen){
+      for (int i = 0; i < lijn.punten.length-1; i++) {
+        canvas.drawLine(lijn.punten[i], lijn.punten[i+1], verf);
+      }
+    }
+
+  }
+
+
+
 }
+
+
+
+
