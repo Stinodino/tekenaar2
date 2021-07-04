@@ -5,6 +5,7 @@ import 'lijn.dart';
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -14,110 +15,98 @@ List<lijn> lijnen = [lijn(0.0, 0.0)];
 
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
-  var x=0;
+
+  double x = 0;
   double offset = 90;
+
   //teken widget
-  CustomPaint tekenaar = CustomPaint(size: Size(300, 300), painter: MyPainter(),);
+  CustomPaint tekenaar = CustomPaint(
+      size: Size(3000, 3000), painter: MyPainter(mijnLijnen: lijnen));
 
-  void knop() {//start bij drukken knop
-    setState(() {});
+  void undo() {
+    //start bij drukken knop
+    setState(() {
+      if (lijnen.length > 1) {
+        lijnen.removeLast();
+      }
+    });
   }
 
-  void dragUpdate(DragUpdateDetails details){//start bij bewegen vinger
-    print(details.globalPosition.dx.toString()+" , " + details.globalPosition.dy.toString());
-
-
-    setState(() {lijnen.last.voegToe(Offset(details.globalPosition.dx,details.globalPosition.dy-offset));});//zorgt ervoor dat hij tekend
-    x++;
+  void dragUpdate(DragUpdateDetails details) {
+    //start bij bewegen vinger
+    setState(() {
+      print(details.globalPosition.dx.toString() +
+          " , " +
+          details.globalPosition.dy.toString());
+      lijnen.last.voegToe(Offset(
+          details.globalPosition.dx, details.globalPosition.dy - offset));
+      x++;
+    });
   }
 
-  void dragStart(DragStartDetails details){//start bij drukken vinger
-    if (lijnen[0]==lijn(0, 0))//als brol lijn is (eerste lijn)
-      lijnen[0] =(lijn(details.globalPosition.dx,details.globalPosition.dy-offset));//brol lijn overschrijven
-    else
-      lijnen.add(lijn(details.globalPosition.dx,details.globalPosition.dy-offset));
-    print("start lijn");
-    setState(() {});//zorgt ervoor dat hij tekend
+  void dragStart(DragStartDetails details) {
+    //start bij drukken vinger
+    setState(() {
+      if (lijnen[0] == lijn(0, 0)) //als brol lijn is (eerste lijn)
+        lijnen[0] = (lijn(details.globalPosition.dx,
+            details.globalPosition.dy - offset)); //brol lijn overschrijven
+      else
+        lijnen.add(lijn(
+            details.globalPosition.dx, details.globalPosition.dy - offset));
+      print("start lijn");
+      x++;
+    });
   }
 
-  void dragEnd(DragEndDetails details){//start bij loslaten vinger
-    print("lijn gedaan");
-    setState(() {});//zorgt ervoor dat hij tekend
+  void dragEnd(DragEndDetails details) {
+    //start bij loslaten vinger
+    setState(() {
+      print("lijn gedaan");
+      x++;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Stack(
-          children: <Widget>[
-            Text(x.toString()),//moet er om vage rede bij omdat anders setstate ni werkt. later beter fixe
-            tekenaar,
-            GestureDetector(
-              onPanUpdate: dragUpdate,
-              onPanEnd: dragEnd,
-              onPanStart: dragStart,
-              onTap: knop,
-            ),
-          ],
-        ),
+      body: Stack(
+        children: <Widget>[
+          GestureDetector(
+            onPanUpdate: dragUpdate,
+            onPanEnd: dragEnd,
+            onPanStart: dragStart,
+            child:
+                tekenaar, //mag ook in stack ipv child. beide manieren gaan toch ni werken als Text() er ni is
+          ),
+          Text(x.toString()),
+          //moet er om vage rede bij omdat anders setstate ni werkt. later beter fixe
+          Align(
+              alignment: Alignment.bottomLeft,
+              child: Container(
+                color: Colors.lightBlue,
+                width: MediaQuery. of(context). size. width,
+                height: 50,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    IconButton(onPressed: undo, icon: const Icon(Icons.undo)),
+                    IconButton(onPressed: undo, icon: const Icon(Icons.add_a_photo_rounded)),
+                    IconButton(onPressed: undo, icon: const Icon(IconData(58548, fontFamily: 'MaterialIcons'))),
+                    IconButton(onPressed: undo, icon: const Icon(IconData(63692, fontFamily: 'MaterialIcons'))),
+                    IconButton(onPressed: undo, icon: const Icon(IconData(57724, fontFamily: 'MaterialIcons'))),
+                  ],
+                ),
+              ))
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: knop,
+      /*floatingActionButton: FloatingActionButton(
+        onPressed: undo,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),*/ // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
-
-
-
-
-
-
-class MyPainter extends CustomPainter { //         <-- CustomPainter class
-  @override
-  void paint(Canvas canvas, Size size) {
-    //                                             <-- Insert your painting code here.
-    //ui.Image test = ui.Image.file(foto);
-    Paint verf = Paint();
-
-    for (var lijn in lijnen){
-      for (int i = 0; i < lijn.punten.length-1; i++) {
-        canvas.drawLine(lijn.punten[i], lijn.punten[i+1], verf);
-      }
-    }
-  }
-  @override
-  bool shouldRepaint(CustomPainter old) {//functie die altijd false returnt. geen idee waarom da erbij moet
-    return false;
-  }
-
-  void verf(Canvas canvas, Size size,lijnen){
-    Paint verf = Paint();
-
-    for (var lijn in lijnen){
-      for (int i = 0; i < lijn.punten.length-1; i++) {
-        canvas.drawLine(lijn.punten[i], lijn.punten[i+1], verf);
-      }
-    }
-
-  }
-
-
-
-}
-
-
-
-

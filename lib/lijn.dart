@@ -17,6 +17,4 @@ class lijn {
     else
       punten.add(punt);//punt toevoegen
   }
-
-
 }
