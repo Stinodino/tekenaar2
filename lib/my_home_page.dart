@@ -21,18 +21,26 @@ ui.Image? imageGalerij;
 
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
-  PickedFile? pickedFile;
   double x = 0;
-  double offset = 90;
-
+  double offset = 150; //offset door 2 balken bovenaan
+  List kleurtjes = [
+    Colors.red,
+    Colors.blue,
+    Colors.green,
+    Colors.black,
+    Colors.yellow,
+    Colors.pink,
+    Colors.white,
+    Colors.purple,
+  ];
   bool isImageloaded = false;
 
   //foto uit galerij halen
   void fotoKiezen() async {
     final pickedFile =
         await ImagePicker().getImage(source: ImageSource.gallery);
-      //is deze setstate ni nutloos?
-      File fileGalerij = File(pickedFile!.path);
+    //is deze setstate ni nutloos?
+    File fileGalerij = File(pickedFile!.path);
 
     Uint8List bytes = fileGalerij.readAsBytesSync();
 
@@ -78,7 +86,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void dragStart(DragStartDetails details) {
     //start bij drukken vinger
     if (lijnen == null) {
-      lijnen = [lijn(details.globalPosition.dx,details.globalPosition.dy-offset)];
+      lijnen = [
+        lijn(details.globalPosition.dx, details.globalPosition.dy - offset)
+      ];
       print(lijnen);
     }
     setState(() {
@@ -98,6 +108,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void veranderKleur(Color kleur){
+
+
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,9 +123,36 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Stack(
         children: <Widget>[
           Text(x.toString()),
-          CustomPaint(
-            painter: MyPainter(
-                mijnLijnen: lijnen, mijnSize: MediaQuery.of(context).size),
+          //later nog weg werken
+          Column(
+            children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: 50,
+                  color: Colors.lightBlue,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (var kleur in kleurtjes)
+                        IconButton(
+                            onPressed: undo,
+                            color: kleur,
+                            icon: const Icon(Icons.circle)),
+                    ],
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.topLeft,
+                child: CustomPaint(
+                  painter: MyPainter(
+                      mijnLijnen: lijnen,
+                      mijnSize: MediaQuery.of(context).size),
+                ),
+              )
+            ],
           ),
           GestureDetector(
             onPanUpdate: dragUpdate,
