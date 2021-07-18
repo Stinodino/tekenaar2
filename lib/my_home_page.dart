@@ -16,10 +16,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 //globeale variables
-List<lijn> lijnen = [lijn(0.0, 0.0)];
-File? fileGalerij;
+List<lijn>? lijnen;
 ui.Image? imageGalerij;
-ui.Image? imageAssets;
 
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
@@ -33,16 +31,15 @@ class _MyHomePageState extends State<MyHomePage> {
   void fotoKiezen() async {
     final pickedFile =
         await ImagePicker().getImage(source: ImageSource.gallery);
-    setState(() {
       //is deze setstate ni nutloos?
-      fileGalerij = File(pickedFile!.path);
-    });
-    Uint8List bytes = fileGalerij!.readAsBytesSync();
+      File fileGalerij = File(pickedFile!.path);
+
+    Uint8List bytes = fileGalerij.readAsBytesSync();
 
     imageGalerij = await loadImage(Uint8List.view(bytes.buffer));
-
   }
 
+  //lijst van bits in Image omzetten
   Future<ui.Image> loadImage(Uint8List img) {
     final Completer<ui.Image> completer = Completer();
     ui.decodeImageFromList(img, (ui.Image img) {
@@ -58,8 +55,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void undo() {
     //start bij drukken knop
     setState(() {
-      if (lijnen.length > 1) {
-        lijnen.removeLast();
+      if (lijnen!.length > 0) {
+        lijnen!.removeLast();
       }
     });
   }
@@ -71,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print(details.globalPosition.dx.toString() +
           " , " +
           details.globalPosition.dy.toString());
-      lijnen.last.voegToe(Offset(
+      lijnen!.last.voegToe(Offset(
           details.globalPosition.dx, details.globalPosition.dy - offset));
       x++;
     });
@@ -80,13 +77,13 @@ class _MyHomePageState extends State<MyHomePage> {
   //methode start als vinger op scherp drukt
   void dragStart(DragStartDetails details) {
     //start bij drukken vinger
+    if (lijnen == null) {
+      lijnen = [lijn(details.globalPosition.dx,details.globalPosition.dy-offset)];
+      print(lijnen);
+    }
     setState(() {
-      if (lijnen[0] == lijn(0, 0)) //als brol lijn is (eerste lijn)
-        lijnen[0] = (lijn(details.globalPosition.dx,
-            details.globalPosition.dy - offset)); //brol lijn overschrijven
-      else
-        lijnen.add(lijn(
-            details.globalPosition.dx, details.globalPosition.dy - offset));
+      lijnen!.add(
+          lijn(details.globalPosition.dx, details.globalPosition.dy - offset));
       print("start lijn");
       x++;
     });
@@ -109,15 +106,17 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Stack(
         children: <Widget>[
+          Text(x.toString()),
           CustomPaint(
-            painter: MyPainter(mijnLijnen: lijnen),
+            painter: MyPainter(
+                mijnLijnen: lijnen, mijnSize: MediaQuery.of(context).size),
           ),
           GestureDetector(
             onPanUpdate: dragUpdate,
             onPanEnd: dragEnd,
             onPanStart: dragStart,
           ),
-          Text(x.toString()),
+
           //moet er om vage rede bij omdat anders setstate ni werkt. later beter fixe
           Align(
             alignment: Alignment.bottomLeft,
