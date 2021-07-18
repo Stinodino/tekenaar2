@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:tekenaar2/lijn.dart';
+import 'lijn.dart';
+import 'my_home_page.dart';
 
 class MyPainter extends CustomPainter {
   MyPainter({this.mijnLijnen});
-  //         <-- CustomPainter class
-  //MyPainter(List<lijn> lijnen, {@required this.mijnLijnen});
+
   List<lijn>? mijnLijnen;
+
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -13,6 +15,23 @@ class MyPainter extends CustomPainter {
     Paint verf = Paint();
     verf.color=Colors.red;
     verf.strokeWidth=2;
+
+    if (imageGalerij == null){//if(foto != null) mag blijkbaar ni
+    }
+    else {
+      //canvas.drawImage(imageGalerij!, Offset(0,0), verf);
+      paintImage(canvas: canvas,
+          rect: Rect.fromLTWH(0, 0, 393, 524.0),
+          image: imageGalerij!,
+          fit: BoxFit.scaleDown,
+          repeat: ImageRepeat.noRepeat,
+          //scale: 1.0,//geen idee wat da doet
+          alignment: Alignment.topLeft,
+          flipHorizontally: false,
+          filterQuality: FilterQuality.high);
+
+    }
+
 
     for (var lijn in mijnLijnen!) {
       if (lijn.punten.length == 1) {
@@ -24,6 +43,8 @@ class MyPainter extends CustomPainter {
         }
       }
     }
+
+
   }
 
   @override
