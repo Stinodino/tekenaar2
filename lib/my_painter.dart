@@ -12,7 +12,6 @@ class MyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     Paint verf = Paint();
-    verf.color = Colors.red;
     verf.strokeWidth = 2;
 
     if (imageGalerij == null) {
@@ -32,6 +31,7 @@ class MyPainter extends CustomPainter {
     if (mijnLijnen == null) return;
 
     for (var lijn in mijnLijnen!) {
+      verf.color=lijn.kleur;
       if (lijn.punten.length == 1) {
         //als de lijn een punt is
         canvas.drawCircle(lijn.punten[0], 2.0, verf);

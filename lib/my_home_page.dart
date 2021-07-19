@@ -19,6 +19,7 @@ class MyHomePage extends StatefulWidget {
 List<lijn>? lijnen;
 ui.Image? imageGalerij;
 
+
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
   double x = 0;
@@ -29,11 +30,12 @@ class _MyHomePageState extends State<MyHomePage> {
     Colors.green,
     Colors.black,
     Colors.yellow,
-    Colors.pink,
+    Colors.orange,
     Colors.white,
     Colors.purple,
   ];
   bool isImageloaded = false;
+  Color kleur = Colors.red;
 
   //foto uit galerij halen
   void fotoKiezen() async {
@@ -87,16 +89,16 @@ class _MyHomePageState extends State<MyHomePage> {
     //start bij drukken vinger
     if (lijnen == null) {
       lijnen = [
-        lijn(details.globalPosition.dx, details.globalPosition.dy - offset)
+        lijn(details.globalPosition.dx, details.globalPosition.dy - offset,kleur)
       ];
-      print(lijnen);
     }
-    setState(() {
-      lijnen!.add(
-          lijn(details.globalPosition.dx, details.globalPosition.dy - offset));
-      print("start lijn");
-      x++;
-    });
+    else {
+        lijnen!.add(
+            lijn(details.globalPosition.dx, details.globalPosition.dy - offset,
+                kleur));
+        print("start lijn" + lijnen!.last.kleur.toString() + kleur.toString());
+        x++;
+    }
   }
 
   //methode start als vinger van scherm is
@@ -108,9 +110,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void veranderKleur(Color kleur){
-
-
+  void veranderKleur(Color mijnKleur){
+    kleur = mijnKleur;
+    print(kleur.toString());
   }
 
 
@@ -137,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: [
                       for (var kleur in kleurtjes)
                         IconButton(
-                            onPressed: undo,
+                            onPressed: () => veranderKleur(kleur),
                             color: kleur,
                             icon: const Icon(Icons.circle)),
                     ],
