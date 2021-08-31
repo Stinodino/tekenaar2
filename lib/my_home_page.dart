@@ -1,11 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'my_painter.dart';
 import 'lijn.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:typed_data';
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
@@ -18,7 +21,6 @@ class MyHomePage extends StatefulWidget {
 //globeale variables
 List<lijn>? lijnen;
 ui.Image? imageGalerij;
-
 
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
@@ -42,7 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
     final pickedFile =
         await ImagePicker().getImage(source: ImageSource.gallery);
     //is deze setstate ni nutloos?
-    File fileGalerij = File(pickedFile!.path);
+    if (pickedFile==null) return;
+    File fileGalerij = File(pickedFile.path);
 
     Uint8List bytes = fileGalerij.readAsBytesSync();
 
@@ -89,15 +92,14 @@ class _MyHomePageState extends State<MyHomePage> {
     //start bij drukken vinger
     if (lijnen == null) {
       lijnen = [
-        lijn(details.globalPosition.dx, details.globalPosition.dy - offset,kleur)
+        lijn(details.globalPosition.dx, details.globalPosition.dy - offset,
+            kleur)
       ];
-    }
-    else {
-        lijnen!.add(
-            lijn(details.globalPosition.dx, details.globalPosition.dy - offset,
-                kleur));
-        print("start lijn" + lijnen!.last.kleur.toString() + kleur.toString());
-        x++;
+    } else {
+      lijnen!.add(lijn(details.globalPosition.dx,
+          details.globalPosition.dy - offset, kleur));
+      print("start lijn" + lijnen!.last.kleur.toString() + kleur.toString());
+      x++;
     }
   }
 
@@ -110,14 +112,34 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void veranderKleur(Color mijnKleur){
+  void veranderKleur(Color mijnKleur) {
     kleur = mijnKleur;
     print(kleur.toString());
+  }
+
+  void draai(Size size, bool richting) {
+    for (var lijn in lijnen!) {
+      lijn.draaiLijn(size, richting);
+    }
+  }
+
+  void slaFotoOp(MyPainter painter) async {
+    final fotoNaam = "fototje1";//opgelet!!!! gaat foto altijd overschijven
+    ui.Picture picture = painter.canvasNaarPicture();//canvas naar picture
+    final img = await picture.toImage(3000, 3000);//picture naar image
+    if (img == null) return;
+    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);//image naar byteData
+    await [Permission.storage].request();
+    final result = await ImageGallerySaver.saveImage(pngBytes!.buffer.asUint8List(), name: fotoNaam);//byteData naar Uint8List en opslagen
+    result['filePath'];
   }
 
 
   @override
   Widget build(BuildContext context) {
+    final painter =
+        MyPainter(mijnLijnen: lijnen, mijnSize: MediaQuery.of(context).size);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -149,9 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Align(
                 alignment: Alignment.topLeft,
                 child: CustomPaint(
-                  painter: MyPainter(
-                      mijnLijnen: lijnen,
-                      mijnSize: MediaQuery.of(context).size),
+                  painter: painter,
                 ),
               )
             ],
@@ -183,24 +203,24 @@ class _MyHomePageState extends State<MyHomePage> {
                       icon: const Icon(
                           IconData(58548, fontFamily: 'MaterialIcons'))),
                   IconButton(
-                      onPressed: undo,
+                      onPressed: () => draai(MediaQuery.of(context).size, true),
                       icon: const Icon(
-                          IconData(63692, fontFamily: 'MaterialIcons'))),
+                          IconData(58688, fontFamily: 'MaterialIcons'))),
                   IconButton(
-                      onPressed: undo,
+                      onPressed: () =>
+                          draai(MediaQuery.of(context).size, false),
                       icon: const Icon(
-                          IconData(57724, fontFamily: 'MaterialIcons'))),
+                          IconData(58687, fontFamily: 'MaterialIcons'))),
+                  IconButton(
+                      onPressed: painter.slaOp,
+                      icon: const Icon(
+                          IconData(58704, fontFamily: 'MaterialIcons'))),
                 ],
               ),
             ),
           ),
         ],
       ),
-      /*floatingActionButton: FloatingActionButton(
-        onPressed: undo,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),*/ // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
