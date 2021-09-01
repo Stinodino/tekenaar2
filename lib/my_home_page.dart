@@ -1,7 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'my_painter.dart';
 import 'lijn.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,11 +18,13 @@ class MyHomePage extends StatefulWidget {
 
 //globeale variables
 List<lijn>? lijnen;
-ui.Image? imageGalerij;
+ui.Image? image;
 
 class _MyHomePageState extends State<MyHomePage> {
   //variables homepage
-  double x = 0;
+  double x = 0;//om rare reden werkt setstate alleen als er een text widget veranderd.
+  // deze x is in de textwidget zodat de custompainter geupdate kan worden met setstate
+  //ik weet dat da brak en marginaal is ma kheb duuzend uur gezocht en niks deftigers gevonden
   double offset = 150; //offset door 2 balken bovenaan
   List kleurtjes = [
     Colors.red,
@@ -38,18 +38,22 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
   bool isImageloaded = false;
   Color kleur = Colors.red;
+  Size sizeFoto = Size(0, 0);
 
   //foto uit galerij halen
   void fotoKiezen() async {
     final pickedFile =
-        await ImagePicker().getImage(source: ImageSource.gallery);
-    //is deze setstate ni nutloos?
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile==null) return;
     File fileGalerij = File(pickedFile.path);
 
-    Uint8List bytes = fileGalerij.readAsBytesSync();
+    //afmetingen uit foto halen
+    var decodedImage = await decodeImageFromList(fileGalerij.readAsBytesSync());
+    sizeFoto = Size(decodedImage.width.toDouble(),decodedImage.height.toDouble());
 
-    imageGalerij = await loadImage(Uint8List.view(bytes.buffer));
+    //File naar Image
+    Uint8List bytes = fileGalerij.readAsBytesSync();
+    image = await loadImage(Uint8List.view(bytes.buffer));
   }
 
   //lijst van bits in Image omzetten
@@ -76,11 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //methode start als vinger beweegt
   void dragUpdate(DragUpdateDetails details) {
-    //start bij bewegen vinger
     setState(() {
-      print(details.globalPosition.dx.toString() +
-          " , " +
-          details.globalPosition.dy.toString());
+      //print(details.globalPosition.dx.toString() + " , " + details.globalPosition.dy.toString());
       lijnen!.last.voegToe(Offset(
           details.globalPosition.dx, details.globalPosition.dy - offset));
       x++;
@@ -98,7 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } else {
       lijnen!.add(lijn(details.globalPosition.dx,
           details.globalPosition.dy - offset, kleur));
-      print("start lijn" + lijnen!.last.kleur.toString() + kleur.toString());
+      //print("start lijn" + lijnen!.last.kleur.toString() + kleur.toString());
       x++;
     }
   }
@@ -106,39 +107,27 @@ class _MyHomePageState extends State<MyHomePage> {
   //methode start als vinger van scherm is
   void dragEnd(DragEndDetails details) {
     //start bij loslaten vinger
-    setState(() {
-      print("lijn gedaan");
-      x++;
-    });
+    setState(() {});//wanneer er op scherm geklikt wordt (geen schuif beweging) zal dragUpdate niet reageren
+    //daarom moet dragEnd het scherm verversen zodat het getekend punt erop komt.
   }
 
   void veranderKleur(Color mijnKleur) {
     kleur = mijnKleur;
-    print(kleur.toString());
+    //print(kleur.toString());
   }
 
   void draai(Size size, bool richting) {
+    //men eerste idee was om de lijnen te draaien + de foto te draaien
+    //ma nu denk ik dat het mss beter is om foto op te slagen en hele foto te draaien
     for (var lijn in lijnen!) {
       lijn.draaiLijn(size, richting);
     }
   }
 
-  void slaFotoOp(MyPainter painter) async {
-    final fotoNaam = "fototje1";//opgelet!!!! gaat foto altijd overschijven
-    ui.Picture picture = painter.canvasNaarPicture();//canvas naar picture
-    final img = await picture.toImage(3000, 3000);//picture naar image
-    if (img == null) return;
-    final pngBytes = await img.toByteData(format: ui.ImageByteFormat.png);//image naar byteData
-    await [Permission.storage].request();
-    final result = await ImageGallerySaver.saveImage(pngBytes!.buffer.asUint8List(), name: fotoNaam);//byteData naar Uint8List en opslagen
-    result['filePath'];
-  }
-
-
   @override
   Widget build(BuildContext context) {
     final painter =
-        MyPainter(mijnLijnen: lijnen, mijnSize: MediaQuery.of(context).size);
+        MyPainter(mijnLijnen: lijnen, sizeScherm: MediaQuery.of(context).size);
 
     return Scaffold(
       appBar: AppBar(
@@ -212,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       icon: const Icon(
                           IconData(58687, fontFamily: 'MaterialIcons'))),
                   IconButton(
-                      onPressed: painter.slaOp,
+                      onPressed: () => painter.slaagFotoOp(sizeFoto),
                       icon: const Icon(
                           IconData(58704, fontFamily: 'MaterialIcons'))),
                 ],
